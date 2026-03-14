@@ -4,6 +4,7 @@ import '../models/alarm_model.dart';
 import '../services/storage_service.dart';
 import '../services/alarm_scheduler_service.dart';
 import '../services/notification_service.dart';
+import '../services/debug_log_service.dart';
 
 class AlarmProvider extends ChangeNotifier {
   List<IntervalAlarm> _alarms = [];
@@ -28,12 +29,14 @@ class AlarmProvider extends ChangeNotifier {
   }
 
   Future<void> _scheduleAlarm(IntervalAlarm alarm) async {
-    await NotificationService().scheduleAlarm(alarm);
+    // NotificationService pre-scheduled ring notifications were removed —
+    // they consumed AlarmManager quota (same 500-alarm pool) redundantly,
+    // since AlarmSchedulerService's callback shows the notification itself.
     await AlarmSchedulerService().scheduleAlarm(alarm);
   }
 
   Future<void> _cancelAlarm(String id) async {
-    await NotificationService().cancelAlarm(id);
+    await NotificationService().cancelAlarm(id); // clears any legacy pre-scheduled entries
     await AlarmSchedulerService().cancelAlarm(id);
   }
 
@@ -42,6 +45,7 @@ class AlarmProvider extends ChangeNotifier {
     final newAlarm = alarm.copyWith(id: _uuid.v4());
     _alarms.insert(0, newAlarm);
     await _save();
+    await DebugLog.log('PROVIDER', 'Alarm ADDED: "${newAlarm.label}" id=${newAlarm.id} enabled=${newAlarm.isEnabled}');
 
     if (newAlarm.isEnabled) {
       await _scheduleAlarm(newAlarm);
@@ -57,6 +61,7 @@ class AlarmProvider extends ChangeNotifier {
 
     _alarms[index] = alarm;
     await _save();
+    await DebugLog.log('PROVIDER', 'Alarm UPDATED: "${alarm.label}" enabled=${alarm.isEnabled}');
 
     await _cancelAlarm(alarm.id);
     if (alarm.isEnabled) {
@@ -75,6 +80,7 @@ class AlarmProvider extends ChangeNotifier {
     final updated = alarm.copyWith(isEnabled: !alarm.isEnabled);
     _alarms[index] = updated;
     await _save();
+    await DebugLog.log('PROVIDER', 'Alarm TOGGLED: "${updated.label}" → enabled=${updated.isEnabled}');
 
     if (updated.isEnabled) {
       await _scheduleAlarm(updated);
@@ -87,6 +93,8 @@ class AlarmProvider extends ChangeNotifier {
 
   /// Delete an alarm
   Future<void> deleteAlarm(String id) async {
+    final alarm = _alarms.firstWhere((a) => a.id == id, orElse: () => _alarms.first);
+    await DebugLog.log('PROVIDER', 'Alarm DELETED: "${alarm.label}"');
     await _cancelAlarm(id);
     _alarms.removeWhere((a) => a.id == id);
     await _save();
@@ -108,7 +116,7 @@ class AlarmProvider extends ChangeNotifier {
 
   /// Reschedule all active alarms (e.g., after app restart)
   Future<void> rescheduleAll() async {
-    for (final alarm in _alarms) {
+    for (final alarm in List.of(_alarms)) {
       if (alarm.isEnabled) {
         await _scheduleAlarm(alarm);
       }

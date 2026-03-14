@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/opt/homebrew/share/flutter/bin/flutter analyze:*)",
+      "Bash(/opt/homebrew/share/flutter/bin/flutter devices:*)",
+      "Read(//opt/homebrew/share/flutter/packages/flutter_tools/gradle/**)",
+      "Bash(ADB=/Users/praveendhra/Library/Android/sdk/platform-tools/adb $ADB -s emulator-5554 logcat -d)",
+      "Bash(/opt/homebrew/share/flutter/bin/flutter run:*)",
+      "Bash(ADB=/Users/praveendhra/Library/Android/sdk/platform-tools/adb)",
+      "Bash($ADB -s emulator-5554 logcat -d)",
+      "Bash(ADB=/Users/praveendhra/Library/Android/sdk/platform-tools/adb sleep 5 $ADB -s emulator-5554 logcat -d)",
+      "Read(//opt/homebrew/share/flutter/bin/**)",
+      "Bash(ADB=/Users/praveendhra/Library/Android/sdk/platform-tools/adb $ADB -s emulator-5554 shell dumpsys alarm)",
+      "Bash(ADB=/Users/praveendhra/Library/Android/sdk/platform-tools/adb $ADB -s emulator-5554 shell pm dump com.example.interval_alarm_app)",
+      "Read(//Users/praveendhra/.pub-cache/**)",
+      "Bash(find /Users/praveendhra/.pub-cache/hosted/pub.dev/android_alarm_manager_plus-5.0.0/android -name *.xml -o -name *.kt -o -name *.java)",
+      "Bash(adb logcat:*)",
+      "Bash(adb devices:*)",
+      "Bash(export PATH=\"$PATH:$HOME/Library/Android/sdk/platform-tools\")",
+      "Bash(export PATH=$PATH:$HOME/Library/Android/sdk/platform-tools)",
+      "Bash(export PATH=$PATH:$HOME/Library/Android/sdk/platform-tools:/usr/bin:/bin)",
+      "Bash(adb shell:*)",
+      "Bash(/Users/praveendhra/Library/Android/sdk/platform-tools/adb root:*)",
+      "Read(//Users/praveendhra/**)",
+      "Bash(nc -w 3 127.0.0.1 5554)",
+      "Bash(python3 -c \"import sys; data=sys.stdin.read\\(\\); print\\(''''OK'''' if ''''debug_logs'''' in data else ''''empty''''\\)\")",
+      "Bash(python3 -c \"from PIL import Image, ImageDraw, ImageFont; print\\(''PIL available''\\)\")",
+      "Bash(pip3 install:*)",
+      "Bash(python3 -c \"from PIL import Image; print\\(''ok''\\)\")",
+      "Bash(python3:*)",
+      "Read(//tmp/**)",
+      "Read(//private/tmp/**)",
+      "Bash(keytool -genkeypair -v -keystore /Users/praveendhra/pravii/interval_alarm_app/android/app/interval-alarm-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias interval-alarm -dname \"CN=Interval Alarm, OU=App, O=Pravii, L=Unknown, S=Unknown, C=IN\" -storepass interval123 -keypass interval123)",
+      "Bash(/opt/homebrew/share/flutter/bin/flutter build:*)",
+      "Bash(adb install:*)",
+      "Bash(~/Library/Android/sdk/platform-tools/adb devices:*)",
+      "Bash(~/Library/Android/sdk/platform-tools/adb install:*)",
+      "Bash(~/Library/Android/sdk/platform-tools/adb uninstall:*)"
+    ]
+  }
+}

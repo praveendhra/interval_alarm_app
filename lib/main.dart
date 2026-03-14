@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'providers/alarm_provider.dart';
 import 'services/alarm_scheduler_service.dart';
@@ -10,6 +13,10 @@ import 'utils/theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Disable google_fonts network fetching — use only bundled/cached fonts.
+  // Without this, it spams errors when the device has no internet.
+  GoogleFonts.config.allowRuntimeFetching = false;
 
   // Lock to portrait
   await SystemChrome.setPreferredOrientations([
@@ -33,6 +40,27 @@ void main() async {
   // Initialize notifications (for visual banners)
   await NotificationService().initialize();
   await NotificationService().requestPermissions();
+
+  if (Platform.isAndroid) {
+    // SCHEDULE_EXACT_ALARM — without this, setAlarmClock() silently fails on
+    // Android 12+. Opens the "Alarms & reminders" special-access settings page.
+    final exactAlarmStatus = await Permission.scheduleExactAlarm.status;
+    if (!exactAlarmStatus.isGranted) {
+      await Permission.scheduleExactAlarm.request();
+    }
+
+    // Battery optimization exemption — critical for OEM phones (OnePlus, Xiaomi,
+    // Samsung) that aggressively kill background processes.
+    final batteryStatus = await Permission.ignoreBatteryOptimizations.status;
+    if (!batteryStatus.isGranted) {
+      await Permission.ignoreBatteryOptimizations.request();
+    }
+
+    // Ensure alarm volume is audible — separate stream from ringer, can be 0.
+    try {
+      await const MethodChannel('app_settings').invokeMethod('ensureAlarmVolume');
+    } catch (_) {}
+  }
 
   runApp(const IntervalAlarmApp());
 }

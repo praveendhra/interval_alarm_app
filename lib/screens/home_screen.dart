@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/alarm_provider.dart';
 import '../models/alarm_model.dart';
 import '../utils/theme.dart';
@@ -21,7 +22,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   late Timer _timer;
   late DateTime _now;
   bool _colonVisible = true;
@@ -35,6 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _now = DateTime.now();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       setState(() {
@@ -42,12 +44,47 @@ class _HomeScreenState extends State<HomeScreen> {
         _colonVisible = !_colonVisible;
       });
     });
+    // Check on launch too (e.g. app opened via full-screen intent)
+    WidgetsBinding.instance.addPostFrameCallback((_) => _stopIfRinging());
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _stopIfRinging();
+  }
+
+  Future<void> _stopIfRinging() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.reload(); // flush background-isolate writes into main engine's cache
+    if (prefs.containsKey('alarm_ringing_callback_id')) {
+      // Guard: ignore if alarm just started (<3s) — fullScreenIntent notification
+      // briefly pauses/resumes the app, which would otherwise kill the next ring
+      // in sequence immediately after it starts.
+      // Default to now so a missing timestamp is treated as age=0 (just started),
+      // not age=epoch (which would bypass the guard entirely).
+      final nowMs = DateTime.now().millisecondsSinceEpoch;
+      final startMs = prefs.getInt('alarm_ring_start_ms') ?? nowMs;
+      final ageMs = nowMs - startMs;
+      if (ageMs < 3000) return;
+      await prefs.setBool('alarm_stop_signal', true);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Alarm stopped'),
+            backgroundColor: AppTheme.cardDark,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -365,7 +402,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                   colorIndex: index,
                                   onTap: () => _openDetail(alarm),
                                   onToggle: () => provider.toggleAlarm(alarm.id),
-                                  onDelete: () => _confirmDelete(alarm),
                                 ),
                               );
                             },
@@ -441,77 +477,4 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _confirmDelete(IntervalAlarm alarm) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppTheme.cardDark,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppTheme.textMuted,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Icon(Icons.delete_rounded, color: AppTheme.error, size: 40),
-            const SizedBox(height: 16),
-            Text('Delete "${alarm.label}"?', style: AppTheme.headlineLarge),
-            const SizedBox(height: 8),
-            Text(
-              'This will cancel all scheduled rings and reminders.',
-              style: AppTheme.bodyMedium,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.textSecondary,
-                      side: const BorderSide(color: AppTheme.cardBorder),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    child: const Text('Cancel'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      context.read<AlarmProvider>().deleteAlarm(alarm.id);
-                      Navigator.pop(ctx);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.error,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    child: const Text('Delete'),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-  }
 }

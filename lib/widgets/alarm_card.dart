@@ -8,20 +8,17 @@ class AlarmCard extends StatelessWidget {
   final int colorIndex;
   final VoidCallback onTap;
   final VoidCallback onToggle;
-  final VoidCallback onDelete;
-
   const AlarmCard({
     super.key,
     required this.alarm,
     required this.colorIndex,
     required this.onTap,
     required this.onToggle,
-    required this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = AlarmColors.getColor(colorIndex);
+    final accentColor = AppTheme.getColor(colorIndex);
     final isActive = alarm.isEnabled;
 
     return GestureDetector(
@@ -97,51 +94,21 @@ class AlarmCard extends StatelessWidget {
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Text(
-                              TimeHelper.formatTime(alarm.startTime),
-                              style: AppTheme.timeLarge.copyWith(
-                                fontSize: 32,
-                                letterSpacing: -1,
-                                color: isActive
-                                    ? AppTheme.textPrimary
-                                    : AppTheme.textSecondary,
-                              ),
+                            _TimeChip(
+                              time: alarm.startTime,
+                              color: isActive ? AppTheme.textPrimary : AppTheme.textSecondary,
                             ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 6),
                               child: Icon(
                                 Icons.arrow_right_alt_rounded,
                                 color: isActive ? accentColor : AppTheme.textMuted,
-                                size: 20,
+                                size: 18,
                               ),
                             ),
-                            Text(
-                              TimeHelper.formatTime(alarm.endTime),
-                              style: AppTheme.timeLarge.copyWith(
-                                fontSize: 32,
-                                letterSpacing: -1,
-                                color: isActive
-                                    ? AppTheme.textPrimary
-                                    : AppTheme.textSecondary,
-                              ),
-                            ),
-                            const Spacer(),
-                            // Delete button
-                            GestureDetector(
-                              onTap: onDelete,
-                              child: Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  color: AppTheme.error.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: const Icon(
-                                  Icons.delete_outline_rounded,
-                                  color: AppTheme.error,
-                                  size: 16,
-                                ),
-                              ),
+                            _TimeChip(
+                              time: alarm.endTime,
+                              color: isActive ? AppTheme.textPrimary : AppTheme.textSecondary,
                             ),
                           ],
                         ),
@@ -185,6 +152,44 @@ class AlarmCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _TimeChip extends StatelessWidget {
+  final DateTime time;
+  final Color color;
+
+  const _TimeChip({required this.time, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final h = time.hour == 0 ? 12 : (time.hour > 12 ? time.hour - 12 : time.hour);
+    final m = time.minute.toString().padLeft(2, '0');
+    final ampm = time.hour >= 12 ? 'PM' : 'AM';
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
+      children: [
+        Text(
+          '$h:$m',
+          style: AppTheme.timeLarge.copyWith(
+            fontSize: 28,
+            letterSpacing: -1,
+            color: color,
+          ),
+        ),
+        const SizedBox(width: 2),
+        Text(
+          ampm,
+          style: AppTheme.bodyMedium.copyWith(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: color.withOpacity(0.6),
+          ),
+        ),
+      ],
     );
   }
 }

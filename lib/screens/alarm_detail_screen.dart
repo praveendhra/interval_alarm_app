@@ -11,6 +11,77 @@ class AlarmDetailScreen extends StatelessWidget {
 
   const AlarmDetailScreen({super.key, required this.alarmId});
 
+  void _confirmDelete(BuildContext context, AlarmProvider provider, IntervalAlarm alarm) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.cardDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppTheme.textMuted,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Icon(Icons.delete_rounded, color: AppTheme.error, size: 40),
+            const SizedBox(height: 16),
+            Text('Delete "${alarm.label}"?', style: AppTheme.headlineLarge),
+            const SizedBox(height: 8),
+            Text(
+              'This will cancel all scheduled rings and reminders.',
+              style: AppTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.textSecondary,
+                      side: const BorderSide(color: AppTheme.cardBorder),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      provider.deleteAlarm(alarm.id);
+                      Navigator.pop(ctx);
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.error,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: const Text('Delete'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<AlarmProvider>(
@@ -33,6 +104,10 @@ class AlarmDetailScreen extends StatelessWidget {
             backgroundColor: Colors.transparent,
             title: Text(alarm.label, style: AppTheme.displayMedium.copyWith(fontSize: 20)),
             actions: [
+              IconButton(
+                icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.error),
+                onPressed: () => _confirmDelete(context, provider, alarm),
+              ),
               IconButton(
                 icon: const Icon(Icons.edit_rounded, color: AppTheme.accentOrange),
                 onPressed: () {

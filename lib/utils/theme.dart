@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // ── Color Palette ──────────────────────────────────────────────
@@ -43,65 +42,67 @@ class AppTheme {
     end: Alignment.bottomRight,
   );
 
-  // ── Typography ─────────────────────────────────────────────────
-  static TextStyle get displayLarge => GoogleFonts.spaceGrotesk(
-        fontSize: 32,
-        fontWeight: FontWeight.w700,
-        color: textPrimary,
-        letterSpacing: -1.2,
-      );
+  // ── Typography — uses only bundled system fonts (no network required) ──
+  static const TextStyle displayLarge = TextStyle(
+    fontSize: 32,
+    fontWeight: FontWeight.w700,
+    color: textPrimary,
+    letterSpacing: -1.2,
+  );
 
-  static TextStyle get displayMedium => GoogleFonts.spaceGrotesk(
-        fontSize: 24,
-        fontWeight: FontWeight.w600,
-        color: textPrimary,
-        letterSpacing: -0.8,
-      );
+  static const TextStyle displayMedium = TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.w600,
+    color: textPrimary,
+    letterSpacing: -0.8,
+  );
 
-  static TextStyle get headlineLarge => GoogleFonts.outfit(
-        fontSize: 20,
-        fontWeight: FontWeight.w600,
-        color: textPrimary,
-      );
+  static const TextStyle headlineLarge = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.w600,
+    color: textPrimary,
+  );
 
-  static TextStyle get headlineMedium => GoogleFonts.outfit(
-        fontSize: 17,
-        fontWeight: FontWeight.w500,
-        color: textPrimary,
-      );
+  static const TextStyle headlineMedium = TextStyle(
+    fontSize: 17,
+    fontWeight: FontWeight.w500,
+    color: textPrimary,
+  );
 
-  static TextStyle get bodyLarge => GoogleFonts.outfit(
-        fontSize: 16,
-        fontWeight: FontWeight.w400,
-        color: textSecondary,
-      );
+  static const TextStyle bodyLarge = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w400,
+    color: textSecondary,
+  );
 
-  static TextStyle get bodyMedium => GoogleFonts.outfit(
-        fontSize: 14,
-        fontWeight: FontWeight.w400,
-        color: textSecondary,
-      );
+  static const TextStyle bodyMedium = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    color: textSecondary,
+  );
 
-  static TextStyle get labelLarge => GoogleFonts.spaceMono(
-        fontSize: 13,
-        fontWeight: FontWeight.w500,
-        color: textMuted,
-        letterSpacing: 1.2,
-      );
+  // Monospace — for labels/time counters, uses 'monospace' alias (Roboto Mono on Android)
+  static const TextStyle labelLarge = TextStyle(
+    fontFamily: 'monospace',
+    fontSize: 13,
+    fontWeight: FontWeight.w500,
+    color: textMuted,
+    letterSpacing: 1.2,
+  );
 
-  static TextStyle get timeLarge => GoogleFonts.spaceGrotesk(
-        fontSize: 48,
-        fontWeight: FontWeight.w700,
-        color: textPrimary,
-        letterSpacing: -2,
-      );
+  static const TextStyle timeLarge = TextStyle(
+    fontSize: 48,
+    fontWeight: FontWeight.w700,
+    color: textPrimary,
+    letterSpacing: -2,
+  );
 
-  static TextStyle get timeMedium => GoogleFonts.spaceGrotesk(
-        fontSize: 28,
-        fontWeight: FontWeight.w600,
-        color: textPrimary,
-        letterSpacing: -1,
-      );
+  static const TextStyle timeMedium = TextStyle(
+    fontSize: 28,
+    fontWeight: FontWeight.w600,
+    color: textPrimary,
+    letterSpacing: -1,
+  );
 
   // ── Theme Data ─────────────────────────────────────────────────
   static ThemeData get darkTheme => ThemeData(
@@ -114,12 +115,12 @@ class AppTheme {
           surface: cardDark,
           error: error,
         ),
-        appBarTheme: AppBarTheme(
+        appBarTheme: const AppBarTheme(
           backgroundColor: Colors.transparent,
           elevation: 0,
           centerTitle: false,
           titleTextStyle: displayMedium,
-          iconTheme: const IconThemeData(color: textPrimary),
+          iconTheme: IconThemeData(color: textPrimary),
         ),
         cardTheme: CardThemeData(
           color: cardDark,
@@ -150,7 +151,7 @@ class AppTheme {
           }),
         ),
         dividerColor: cardBorder,
-        textTheme: TextTheme(
+        textTheme: const TextTheme(
           displayLarge: displayLarge,
           displayMedium: displayMedium,
           headlineLarge: headlineLarge,
@@ -187,4 +188,11 @@ class AppTheme {
           ),
         ],
       );
+
+  // ── Accent colors list ─────────────────────────────────────────
+  static const List<Color> _accentColors = [
+    accentOrange, accentTeal, accentBlue, accentPurple, accentRose, accentAmber,
+  ];
+
+  static Color getColor(int index) => _accentColors[index % _accentColors.length];
 }
