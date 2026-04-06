@@ -279,7 +279,7 @@ Future<void> _alarmAudioCallbackBody(int id) async {
       await player.setSource(DeviceFileSource(tuneFilePath));
       await player.resume();
       await DebugLog.log('CALLBACK', 'AudioPlayer looping — waiting for stop signal');
-      final stopAt = DateTime.now().add(const Duration(minutes: 5));
+      final stopAt = DateTime.now().add(const Duration(seconds: 10));
       int pollCount = 0;
       while (DateTime.now().isBefore(stopAt)) {
         await Future.delayed(const Duration(milliseconds: 500));
