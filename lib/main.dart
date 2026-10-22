@@ -77,7 +77,7 @@ class IntervalAlarmApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => AlarmProvider()..loadAlarms(),
       child: MaterialApp(
-        title: 'Interval Alarm',
+        title: 'Cadence',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.darkTheme,
         home: Demo.enabled ? Demo.home() : const HomeScreen(),

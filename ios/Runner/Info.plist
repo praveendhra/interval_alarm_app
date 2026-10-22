@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Interval Alarm</string>
+	<string>Cadence</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Interval Alarm</string>
+	<string>Cadence</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -47,8 +47,8 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Interval Alarm only reads audio files you pick to use as alarm tunes.</string>
+	<string>Cadence only reads audio files you pick to use as alarm tunes.</string>
 	<key>NSAppleMusicUsageDescription</key>
-	<string>Interval Alarm only reads audio files you pick to use as alarm tunes.</string>
+	<string>Cadence only reads audio files you pick to use as alarm tunes.</string>
 </dict>
 </plist>

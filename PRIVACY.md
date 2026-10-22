@@ -1,8 +1,8 @@
-# Interval Alarm — Privacy Policy
+# Cadence: Interval Alarm — Privacy Policy
 
 _Last updated: October 22, 2026_
 
-Interval Alarm does not collect, store on a server, share or sell any personal data.
+Cadence does not collect, store on a server, share or sell any personal data.
 
 - **Your alarms and settings** are saved only on your device. They are deleted when you delete the app.
 - **Tunes you import** are copied into the app's own storage on your device so they can play as alarm sounds. The app only reads the files you pick.

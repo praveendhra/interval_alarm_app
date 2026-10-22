@@ -1,4 +1,4 @@
-# Releasing Interval Alarm to the App Store
+# Releasing Cadence: Interval Alarm to the App Store
 
 Everything builds on GitHub Actions macOS runners, so no Mac is needed.
 
@@ -22,17 +22,10 @@ GitHub → praveendhra/interval_alarm_app → Settings → Secrets and variables
 
 If you no longer have the `.p8` file, generate a new key on the same page (role **App Manager**); Apple only lets you download it once. Then update the Task Tracker secrets too.
 
-### 2. Create the app in App Store Connect
+### 2. App record (done)
 
-The release workflow registers the bundle ID `com.pravii.intervalAlarm` on its first run. Apple's API can't create the app record itself, so:
-
-App Store Connect → Apps → **+** → New App:
-- Platforms: iOS
-- Name: **Interval Alarm: Repeat Timer** (alternatives in [listing.md](listing.md))
-- Primary language: English (U.S.)
-- Bundle ID: **com.pravii.intervalAlarm** (if it isn't in the list yet, run the release workflow once first; the upload step fails but the bundle ID gets registered)
-- SKU: `interval-alarm`
-- User access: Full Access
+- App ID `com.pravii.intervalAlarm` ("Cadence") is registered under Certificates, Identifiers & Profiles.
+- App Store Connect app **Cadence: Interval Alarm** exists (Apple ID 6825985493, SKU `interval-alarm`, English (U.S.)).
 
 ## Shipping a build
 

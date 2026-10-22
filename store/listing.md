@@ -1,4 +1,4 @@
-# App Store listing: Interval Alarm
+# App Store listing: Cadence: Interval Alarm
 
 Copy these into App Store Connect.
 
@@ -6,7 +6,7 @@ Copy these into App Store Connect.
 
 | Field | Value |
 |---|---|
-| Name (30 max) | Interval Alarm: Repeat Timer |
+| Name (30 max) | Cadence: Interval Alarm (created in App Store Connect, Apple ID 6825985493) |
 | Subtitle (30 max) | Repeating alarms on a schedule |
 | Bundle ID | com.pravii.intervalAlarm |
 | SKU | interval-alarm |
@@ -19,11 +19,11 @@ Copy these into App Store Connect.
 | App Privacy | Data Not Collected |
 | Export compliance | No encryption (already declared in Info.plist) |
 
-If the name is taken, try "Interval Alarm – Ring Every X" or "Repeat Alarm: Interval Timer".
+Home-screen name: **Cadence**.
 
 ## Promotional text (170 max)
 
-Set a start time, an end time and an interval. Interval Alarm rings at every step, with an optional heads-up a few minutes before each one.
+Set a start time, an end time and an interval. Cadence rings at every step, with an optional heads-up a few minutes before each one.
 
 ## Keywords (100 max)
 
@@ -31,7 +31,7 @@ interval,repeat,alarm,timer,reminder,pomodoro,hydration,break,stretch,focus,rout
 
 ## Description
 
-Interval Alarm rings on a schedule you set once: pick a start time, an end time and how often it should ring, and it handles every ring in between.
+Cadence rings on a schedule you set once: pick a start time, an end time and how often it should ring, and it handles every ring in between.
 
 Great for focus sprints, hourly stretch breaks, drinking water, study sessions, medication rounds, workout intervals or anything that repeats through the day.
 
@@ -42,7 +42,7 @@ Great for focus sprints, hourly stretch breaks, drinking water, study sessions, 
 • YOUR OWN TUNES: pick from built-in tunes or import your own audio files.
 • PRIVATE: no account, no ads, no tracking. Everything stays on your phone.
 
-Alerts are delivered as notifications, so keep notifications on for Interval Alarm and turn up the volume to hear them.
+Alerts are delivered as notifications, so keep notifications on for Cadence and turn up the volume to hear them.
 
 ## What's New (version 1.0.0)
 
