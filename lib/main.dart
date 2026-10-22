@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'demo.dart';
 import 'providers/alarm_provider.dart';
 import 'services/alarm_scheduler_service.dart';
 import 'services/notification_service.dart';
@@ -32,7 +33,8 @@ void main() async {
   ));
 
   // Initialize the alarm manager (required before scheduling any alarms)
-  await AndroidAlarmManager.initialize();
+  // Android-only plugin: calling it on iOS throws MissingPluginException.
+  if (Platform.isAndroid) await AndroidAlarmManager.initialize();
 
   // Copy tune assets to device storage so background isolates can play them
   await AlarmSchedulerService.copyTunesToStorage();
@@ -62,6 +64,8 @@ void main() async {
     } catch (_) {}
   }
 
+  await Demo.seed();
+
   runApp(const IntervalAlarmApp());
 }
 
@@ -76,7 +80,7 @@ class IntervalAlarmApp extends StatelessWidget {
         title: 'Interval Alarm',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.darkTheme,
-        home: const HomeScreen(),
+        home: Demo.enabled ? Demo.home() : const HomeScreen(),
       ),
     );
   }

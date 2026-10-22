@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/alarm_provider.dart';
@@ -11,6 +13,7 @@ import '../widgets/alarm_card.dart';
 import '../widgets/empty_state.dart';
 import '../services/notification_service.dart';
 import '../services/audio_service.dart';
+import '../services/ios_alarm_scheduler.dart';
 import 'create_alarm_screen.dart';
 import 'alarm_detail_screen.dart';
 import 'my_tunes_screen.dart';
@@ -57,7 +60,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _stopIfRinging();
+    if (state != AppLifecycleState.resumed) return;
+    if (Platform.isIOS) {
+      // Top up the 64-notification window each time the app is opened.
+      context.read<AlarmProvider>().rescheduleAll();
+    } else {
+      _stopIfRinging();
+    }
   }
 
   Future<void> _stopIfRinging() async {
@@ -98,6 +107,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             _buildTopBar(),
             _buildDigitalClock(),
             _buildNextRingBanner(),
+            _buildIosLimitBanner(),
             _buildAlarmsList(),
           ],
         ),
@@ -124,6 +134,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             children: [
               GestureDetector(
                 onTap: () async {
+                  if (Platform.isIOS) {
+                    await openAppSettings();
+                    return;
+                  }
                   // Opens notification settings — tap this once and set importance to HIGH
                   const MethodChannel('app_settings').invokeMethod('openNotificationSettings');
                 },
@@ -277,6 +291,38 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildIosLimitBanner() {
+    return ValueListenableBuilder<bool>(
+      valueListenable: IosAlarmScheduler.needsAppOpen,
+      builder: (_, show, __) {
+        if (!show) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppTheme.accentAmber.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppTheme.accentAmber.withValues(alpha: 0.25)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline_rounded, color: AppTheme.accentAmber, size: 16),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'iPhone holds 64 upcoming alerts. Open the app daily to keep later rings scheduled.',
+                    style: AppTheme.bodyMedium.copyWith(color: AppTheme.accentAmber, fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

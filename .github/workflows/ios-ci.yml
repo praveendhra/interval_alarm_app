@@ -1,0 +1,115 @@
+name: iOS check
+
+# Builds the iOS app on every PR and push to master, runs it in the iPhone
+# simulator with sample alarms, and captures 6.9" App Store screenshots.
+# The screenshots and a run log are pushed to the `ci-screenshots` branch
+# (and kept as a workflow artifact).
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ios-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - run: flutter test
+
+  ios:
+    runs-on: macos-15
+    timeout-minutes: 60
+    env:
+      BUNDLE_ID: com.pravii.intervalAlarm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+
+      - name: Release build compiles (unsigned)
+        run: flutter build ios --release --no-codesign
+
+      - name: Boot iPhone simulator
+        run: |
+          DEVICE=$(xcrun simctl list devices available -j | python3 -c '
+          import json,sys
+          d=json.load(sys.stdin)["devices"]
+          names=[(rt,x) for rt,xs in d.items() if "iOS" in rt for x in xs]
+          for want in ("iPhone 17 Pro Max","iPhone 16 Pro Max","iPhone 16 Plus","iPhone 15 Pro Max"):
+              m=[x for rt,x in sorted(names, reverse=True) if x["name"]==want]
+              if m: print(m[0]["udid"]); break
+          ')
+          echo "Using simulator $DEVICE"
+          echo "SIM=$DEVICE" >> "$GITHUB_ENV"
+          xcrun simctl boot "$DEVICE"
+          xcrun simctl bootstatus "$DEVICE" -b
+          xcrun simctl status_bar "$DEVICE" override --time "9:41" --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4 --dataNetwork wifi || true
+          xcrun simctl ui "$DEVICE" appearance dark || true
+
+      - name: Run demo builds and capture screenshots
+        run: |
+          mkdir -p shots
+          n=1
+          for screen in home detail create tunes; do
+            flutter build ios --simulator --debug --dart-define=DEMO=true --dart-define=SCREEN=$screen
+            xcrun simctl terminate "$SIM" "$BUNDLE_ID" 2>/dev/null || true
+            xcrun simctl install "$SIM" build/ios/iphonesimulator/Runner.app
+            xcrun simctl launch "$SIM" "$BUNDLE_ID"
+            sleep 25
+            xcrun simctl io "$SIM" screenshot "shots/0${n}_${screen}.png"
+            n=$((n+1))
+          done
+
+      - name: Check iOS scheduling and tune conversion
+        run: |
+          DATA=$(xcrun simctl get_app_container "$SIM" "$BUNDLE_ID" data)
+          {
+            echo "== Library/Sounds =="
+            ls -la "$DATA/Library/Sounds" || echo "(missing)"
+            for f in "$DATA"/Library/Sounds/*.caf; do [ -f "$f" ] && afinfo "$f" | grep -E "File type|Data format|estimated duration"; done
+            echo "== App log =="
+            plutil -extract flutter.debug_logs_v1 raw -o - "$DATA/Library/Preferences/$BUNDLE_ID.plist" 2>/dev/null \
+              | python3 -c 'import json,sys; print("\n".join(json.load(sys.stdin)))' \
+              | grep -E "IOS|SETUP|ERROR|failed" || echo "(no log)"
+          } | tee shots/run-log.txt
+          grep -q "repeating notifications\|one-shot notifications" shots/run-log.txt || { echo "::error::iOS scheduler did not run"; exit 1; }
+          ls "$DATA"/Library/Sounds/*.caf >/dev/null 2>&1 || { echo "::error::No notification sounds were converted"; exit 1; }
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-screenshots
+          path: shots/
+          if-no-files-found: ignore
+
+      - name: Publish screenshots to ci-screenshots branch
+        if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        run: |
+          [ -d shots ] || exit 0
+          cd shots
+          git init -q -b ci-screenshots
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          echo "Run ${{ github.run_id }} on ${{ github.sha }}" > README.md
+          git add -A && git commit -qm "Screenshots for ${{ github.sha }}"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" ci-screenshots

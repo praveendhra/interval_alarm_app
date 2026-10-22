@@ -16,6 +16,7 @@ A Flutter alarm app that rings at configurable intervals between a start and end
 - **Persistence** — Alarms saved locally via SharedPreferences.
 - **Notifications** — Native scheduled notifications via `flutter_local_notifications` for both rings and reminders.
 - **Cross Platform** — Works on both Android and iOS.
+- **Privacy** — No accounts, analytics or network access. See [PRIVACY.md](PRIVACY.md).
 
 ---
 
@@ -88,15 +89,8 @@ Place `.mp3` files in `assets/tunes/` matching the IDs in `PreloadedTunes`:
 ### Android Setup
 Add the permissions from `android/AndroidManifest_permissions.xml` into your actual `AndroidManifest.xml`.
 
-### iOS Setup
-Add to `ios/Runner/Info.plist`:
-```xml
-<key>UIBackgroundModes</key>
-<array>
-  <string>audio</string>
-  <string>fetch</string>
-</array>
-```
+### iOS
+iOS builds run on GitHub Actions (no Mac needed). See [`store/RELEASE.md`](store/RELEASE.md) for App Store setup and releases, and [`store/listing.md`](store/listing.md) for the store listing. On iPhone, rings and reminders are scheduled local notifications that play the chosen tune (details in RELEASE.md).
 
 ### Run
 ```bash

@@ -32,10 +32,13 @@ class NotificationService {
 
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
+    // Demo builds (CI screenshots) skip the permission prompt so it doesn't
+    // cover the screen; real builds ask on first launch.
+    const askIos = !bool.fromEnvironment('DEMO');
     const iosSettings = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
+      requestAlertPermission: askIos,
+      requestBadgePermission: askIos,
+      requestSoundPermission: askIos,
     );
 
     await _notifications.initialize(
@@ -250,7 +253,15 @@ class NotificationService {
       audioAttributesUsage: AudioAttributesUsage.alarm,
       enableVibration: true,
     );
-    const details = NotificationDetails(android: androidDetails);
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBanner: true,
+        presentList: true,
+        presentSound: true,
+      ),
+    );
 
     // Immediate notification
     await _notifications.show(9999, '🔔 Sound Test', 'Immediate — sound working!', details);
