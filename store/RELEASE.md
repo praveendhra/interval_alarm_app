@@ -9,6 +9,8 @@ Everything builds on GitHub Actions macOS runners, so no Mac is needed.
 
 ### 1. GitHub secrets
 
+Quickest way, on your Mac: `./scripts/set-ios-secrets.sh` (or pass the `.p8` path). It finds the newest `AuthKey_*.p8` in Downloads, reads the Key ID from its name, asks for the Issuer ID, uses `~/ios_cert_key`, sets all four secrets, and can start a TestFlight build. To do it by hand instead:
+
 These are the same four values the Task Tracker repo uses, so copy them over. The same API key and certificate key work for every app on the team.
 
 GitHub → praveendhra/interval_alarm_app → Settings → Secrets and variables → Actions → **New repository secret**:

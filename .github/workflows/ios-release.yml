@@ -77,7 +77,9 @@ jobs:
         id: build
         run: |
           VERSION="${{ github.event.inputs.version }}"
-          if [ -z "$VERSION" ] && [[ "$GITHUB_REF_NAME" == ios-v* ]]; then VERSION="${GITHUB_REF_NAME#ios-v}"; fi
+          # Tags look like ios-v1.0.0 or ios-v1.0.0-<anything>; the part after
+          # the first dash is ignored so a version can be rebuilt with a new tag.
+          if [ -z "$VERSION" ] && [[ "$GITHUB_REF_NAME" == ios-v* ]]; then VERSION="${GITHUB_REF_NAME#ios-v}"; VERSION="${VERSION%%-*}"; fi
           if [ -z "$VERSION" ]; then VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: *//; s/+.*//'); fi
           BUILD=$((100 + GITHUB_RUN_NUMBER))
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
