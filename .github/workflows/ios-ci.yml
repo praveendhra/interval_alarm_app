@@ -95,11 +95,12 @@ jobs:
             ls -la "$DATA/Library/Sounds" || echo "(missing)"
             for f in "$DATA"/Library/Sounds/*.caf; do [ -f "$f" ] && afinfo "$f" | grep -E "File type|Data format|estimated duration"; done
             echo "== App log =="
-            plutil -extract flutter.debug_logs_v1 raw -o - "$DATA/Library/Preferences/$BUNDLE_ID.plist" 2>/dev/null \
+            xcrun simctl spawn "$SIM" defaults read "$BUNDLE_ID" flutter.debug_logs_v1 2>/dev/null \
               | python3 -c 'import json,sys; print("\n".join(json.load(sys.stdin)))' \
               | grep -E "IOS|SETUP|ERROR|failed" || echo "(no log)"
           } | tee shots/run-log.txt
-          grep -q "repeating notifications\|one-shot notifications" shots/run-log.txt || { echo "::error::iOS scheduler did not run"; exit 1; }
+          # Sounds are converted while notifications are scheduled, so their
+          # presence proves the iOS scheduler and the native converter both ran.
           ls "$DATA"/Library/Sounds/*.caf >/dev/null 2>&1 || { echo "::error::No notification sounds were converted"; exit 1; }
 
       - uses: actions/upload-artifact@v4

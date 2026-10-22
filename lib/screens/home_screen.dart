@@ -123,7 +123,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'INTERVAL',
+            'CADENCE',
             style: AppTheme.labelLarge.copyWith(
               fontSize: 11,
               letterSpacing: 5,
@@ -145,14 +145,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.red.withValues(alpha: 0.15),
+                    color: AppTheme.cardDark,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                    border: Border.all(color: AppTheme.cardBorder),
                   ),
                   child: const Icon(
-                    Icons.notifications_active_rounded,
-                    color: Colors.red,
+                    Icons.notifications_none_rounded,
+                    color: AppTheme.textSecondary,
                     size: 20,
+                    semanticLabel: 'Notification settings',
                   ),
                 ),
               ),
@@ -174,6 +175,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     Icons.volume_up_rounded,
                     color: AppTheme.accentAmber,
                     size: 20,
+                    semanticLabel: 'Test alarm sound',
                   ),
                 ),
               ),
@@ -195,6 +197,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     Icons.library_music_rounded,
                     color: AppTheme.textSecondary,
                     size: 20,
+                    semanticLabel: 'My tunes',
                   ),
                 ),
               ),

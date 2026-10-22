@@ -82,15 +82,20 @@ class AppTheme {
   );
 
   // Monospace — for labels/time counters, uses 'monospace' alias (Roboto Mono on Android)
+  // iOS has no 'monospace' family, so fall back to Menlo there.
   static const TextStyle labelLarge = TextStyle(
     fontFamily: 'monospace',
+    fontFamilyFallback: ['Menlo', 'Courier'],
+    fontFeatures: [FontFeature.tabularFigures()],
     fontSize: 13,
     fontWeight: FontWeight.w500,
     color: textMuted,
     letterSpacing: 1.2,
   );
 
+  // Tabular figures keep the ticking clock from shifting width each second.
   static const TextStyle timeLarge = TextStyle(
+    fontFeatures: [FontFeature.tabularFigures()],
     fontSize: 48,
     fontWeight: FontWeight.w700,
     color: textPrimary,
@@ -98,6 +103,7 @@ class AppTheme {
   );
 
   static const TextStyle timeMedium = TextStyle(
+    fontFeatures: [FontFeature.tabularFigures()],
     fontSize: 28,
     fontWeight: FontWeight.w600,
     color: textPrimary,

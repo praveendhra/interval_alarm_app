@@ -429,7 +429,7 @@ class _TunePickerState extends State<TunePicker> {
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      'Import your own MP3s',
+                      'Import your own tunes',
                       style: AppTheme.bodyMedium.copyWith(
                         color: AppTheme.accentPurple.withOpacity(0.8),
                         fontWeight: FontWeight.w500,
@@ -492,7 +492,7 @@ class _ImportButton extends StatelessWidget {
               ),
             const SizedBox(width: 6),
             Text(
-              isImporting ? 'Importing...' : 'Add MP3',
+              isImporting ? 'Importing...' : 'Add tune',
               style: AppTheme.bodyMedium.copyWith(
                 color: AppTheme.accentPurple,
                 fontSize: 12,

@@ -21,7 +21,8 @@ import 'debug_log_service.dart';
 ///   notification (daily or weekly), so alarms keep working even if the app
 ///   is never opened again. When it doesn't fit, the next 64 rings are
 ///   scheduled one-shot and topped up every time the app comes to the
-///   foreground ([needsAppOpen] becomes true so the UI can say so).
+///   foreground ([needsAppOpen] becomes true when that only covers the
+///   next two days, so the UI can say so).
 /// * Notification sounds must be short (under 30 s) PCM files in
 ///   `Library/Sounds`. Tunes are converted there by native code
 ///   (AppDelegate.swift), looped to ~28 s for rings and ~10 s for reminders.
@@ -77,38 +78,61 @@ class IosAlarmScheduler {
         slots.putIfAbsent(key, () => _Slot(alarm, ev.reminder, ev.at.hour, ev.at.minute)).weekdays.add(ev.at.weekday);
       }
     }
-    final repeatingCount = slots.values.fold<int>(0, (n, s) => n + (s.weekdays.length == 7 ? 1 : s.weekdays.length));
+    // Daily slots cost one notification each and repeat forever, so they go
+    // first. Slots that only run on some weekdays repeat weekly if they fit
+    // in what's left; otherwise those alarms get their soonest rings as
+    // one-shot notifications, topped up each time the app is opened.
+    final daily = slots.values.where((s) => s.weekdays.length == 7).toList();
+    final weekly = slots.values.where((s) => s.weekdays.length < 7).toList();
+    final weeklyCount = weekly.fold<int>(0, (n, s) => n + s.weekdays.length);
 
     var id = 1;
-    if (repeatingCount <= maxPending) {
-      for (final slot in slots.values) {
+    var oneShot = <_Event>[];
+    if (daily.length > maxPending) {
+      // Even the daily slots don't fit: everything becomes one-shot.
+      oneShot = _upcoming(enabled, now);
+    } else {
+      for (final slot in daily) {
         final sound = await soundFor(slot.reminder ? slot.alarm.reminderTune : slot.alarm.alarmTune, slot.reminder);
-        if (slot.weekdays.length == 7) {
-          await _schedule(plugin, id++, slot.alarm, slot.reminder, _nextTime(now, slot.hour, slot.minute, null), sound, DateTimeComponents.time);
-        } else {
+        await _schedule(plugin, id++, slot.alarm, slot.reminder, _nextTime(now, slot.hour, slot.minute, null), sound, DateTimeComponents.time);
+      }
+      if (daily.length + weeklyCount <= maxPending) {
+        for (final slot in weekly) {
+          final sound = await soundFor(slot.reminder ? slot.alarm.reminderTune : slot.alarm.alarmTune, slot.reminder);
           for (final weekday in slot.weekdays) {
             await _schedule(plugin, id++, slot.alarm, slot.reminder, _nextTime(now, slot.hour, slot.minute, weekday), sound, DateTimeComponents.dayOfWeekAndTime);
           }
         }
+      } else {
+        final weeklyKeys = weekly.map((s) => '${s.alarm.id}|${s.reminder}|${s.hour}:${s.minute}').toSet();
+        oneShot = _upcoming(enabled, now)
+            .where((e) => weeklyKeys.contains('${e.alarm.id}|${e.reminder}|${e.at.hour}:${e.at.minute}'))
+            .toList();
       }
-      needsAppOpen.value = false;
-      await DebugLog.log('IOS', 'Scheduled ${id - 1} repeating notifications');
-      return;
     }
 
-    // Too many for repeating slots: schedule the soonest 64 one-shot.
-    final upcoming = <_Event>[];
-    for (final alarm in enabled) {
-      upcoming.addAll(_eventsForWeek(alarm, DateTime(now.year, now.month, now.day), days: 8).where((e) => e.at.isAfter(now)));
-    }
-    upcoming.sort((a, b) => a.at.compareTo(b.at));
-    for (final ev in upcoming.take(maxPending)) {
+    final oneShotTotal = oneShot.length;
+    final room = maxPending - (id - 1);
+    final taken = oneShot.take(room).toList();
+    for (final ev in taken) {
       final sound = await soundFor(ev.reminder ? ev.alarm.reminderTune : ev.alarm.alarmTune, ev.reminder);
       final at = tz.TZDateTime(tz.local, ev.at.year, ev.at.month, ev.at.day, ev.at.hour, ev.at.minute);
       await _schedule(plugin, id++, ev.alarm, ev.reminder, at, sound, null);
     }
-    needsAppOpen.value = upcoming.length > maxPending;
-    await DebugLog.log('IOS', 'Scheduled ${id - 1} one-shot notifications of ${upcoming.length} upcoming');
+
+    // Only nag when what's scheduled runs out within two days.
+    final truncated = oneShotTotal > taken.length;
+    needsAppOpen.value = truncated && (taken.isEmpty || taken.last.at.isBefore(now.add(const Duration(days: 2))));
+    await DebugLog.log('IOS', 'Scheduled ${id - 1} notifications (${daily.length} daily, ${taken.length} one-shot of $oneShotTotal)');
+  }
+
+  /// Every upcoming ring/reminder over the next 8 days, soonest first.
+  static List<_Event> _upcoming(List<IntervalAlarm> alarms, tz.TZDateTime now) {
+    final today = DateTime(now.year, now.month, now.day);
+    final events = <_Event>[
+      for (final alarm in alarms) ..._eventsForWeek(alarm, today, days: 8).where((e) => e.at.isAfter(now)),
+    ]..sort((a, b) => a.at.compareTo(b.at));
+    return events;
   }
 
   /// Every ring and reminder of [alarm] for [days] days starting at [today]

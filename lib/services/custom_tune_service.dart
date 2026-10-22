@@ -13,6 +13,9 @@ class CustomTuneService {
   static const String _storageKey = 'custom_tunes';
   static const String _tunesDirName = 'custom_tunes';
   static const _uuid = Uuid();
+  // iOS can't decode OGG for playback or notification sounds.
+  static List<String> get _extensions =>
+      Platform.isIOS ? ['mp3', 'wav', 'aac', 'm4a'] : ['mp3', 'wav', 'aac', 'm4a', 'ogg'];
 
   // ── Get the custom tunes directory ──────────────────────────
   static Future<Directory> _getTunesDir() async {
@@ -58,7 +61,7 @@ class CustomTuneService {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['mp3', 'wav', 'aac', 'm4a', 'ogg'],
+        allowedExtensions: _extensions,
         allowMultiple: false,
       );
 
@@ -110,7 +113,7 @@ class CustomTuneService {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['mp3', 'wav', 'aac', 'm4a', 'ogg'],
+        allowedExtensions: _extensions,
         allowMultiple: true,
       );
 
