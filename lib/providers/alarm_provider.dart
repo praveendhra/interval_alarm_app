@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../models/alarm_model.dart';
@@ -5,6 +6,7 @@ import '../services/storage_service.dart';
 import '../services/alarm_scheduler_service.dart';
 import '../services/notification_service.dart';
 import '../services/debug_log_service.dart';
+import '../services/ios_alarm_scheduler.dart';
 
 class AlarmProvider extends ChangeNotifier {
   List<IntervalAlarm> _alarms = [];
@@ -28,7 +30,14 @@ class AlarmProvider extends ChangeNotifier {
     await rescheduleAll();
   }
 
+  // iOS schedules every alarm together (64-notification budget), so per-alarm
+  // schedule/cancel calls are no-ops there and each change ends with _syncIos().
+  Future<void> _syncIos() async {
+    if (Platform.isIOS) await IosAlarmScheduler.sync(_alarms);
+  }
+
   Future<void> _scheduleAlarm(IntervalAlarm alarm) async {
+    if (Platform.isIOS) return;
     // NotificationService pre-scheduled ring notifications were removed —
     // they consumed AlarmManager quota (same 500-alarm pool) redundantly,
     // since AlarmSchedulerService's callback shows the notification itself.
@@ -36,6 +45,7 @@ class AlarmProvider extends ChangeNotifier {
   }
 
   Future<void> _cancelAlarm(String id) async {
+    if (Platform.isIOS) return;
     await NotificationService().cancelAlarm(id); // clears any legacy pre-scheduled entries
     await AlarmSchedulerService().cancelAlarm(id);
   }
@@ -50,6 +60,7 @@ class AlarmProvider extends ChangeNotifier {
     if (newAlarm.isEnabled) {
       await _scheduleAlarm(newAlarm);
     }
+    await _syncIos();
 
     notifyListeners();
   }
@@ -67,6 +78,7 @@ class AlarmProvider extends ChangeNotifier {
     if (alarm.isEnabled) {
       await _scheduleAlarm(alarm);
     }
+    await _syncIos();
 
     notifyListeners();
   }
@@ -87,6 +99,7 @@ class AlarmProvider extends ChangeNotifier {
     } else {
       await _cancelAlarm(updated.id);
     }
+    await _syncIos();
 
     notifyListeners();
   }
@@ -98,6 +111,7 @@ class AlarmProvider extends ChangeNotifier {
     await _cancelAlarm(id);
     _alarms.removeWhere((a) => a.id == id);
     await _save();
+    await _syncIos();
     notifyListeners();
   }
 
@@ -116,6 +130,7 @@ class AlarmProvider extends ChangeNotifier {
 
   /// Reschedule all active alarms (e.g., after app restart)
   Future<void> rescheduleAll() async {
+    if (Platform.isIOS) return _syncIos();
     for (final alarm in List.of(_alarms)) {
       if (alarm.isEnabled) {
         await _scheduleAlarm(alarm);

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/alarm_model.dart';
 import '../services/audio_service.dart';
@@ -229,7 +230,7 @@ class _MyTunesScreenState extends State<MyTunesScreen> {
                 )
               : const Icon(Icons.file_upload_outlined, size: 22),
           label: Text(
-            _isImporting ? 'Importing...' : 'Import MP3s',
+            _isImporting ? 'Importing...' : 'Import tunes',
             style: AppTheme.headlineMedium.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w600,
@@ -267,13 +268,15 @@ class _MyTunesScreenState extends State<MyTunesScreen> {
             Text('No Custom Tunes', style: AppTheme.displayMedium),
             const SizedBox(height: 10),
             Text(
-              'Import your favorite MP3s to use\nas alarm and reminder tunes.',
+              'Import your own audio files to use\nas alarm and reminder tunes.',
               style: AppTheme.bodyLarge,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              'Supports MP3, WAV, AAC, M4A, OGG\nMax 10MB per file',
+              Platform.isIOS
+                  ? 'Supports MP3, WAV, AAC, M4A\nMax 10MB per file'
+                  : 'Supports MP3, WAV, AAC, M4A, OGG\nMax 10MB per file',
               style: AppTheme.bodyMedium.copyWith(
                 color: AppTheme.textMuted,
                 fontSize: 12,
