@@ -51,18 +51,25 @@ jobs:
 
       - name: Boot iPhone simulator
         run: |
+          mkdir -p shots
+          xcrun simctl list devices available > shots/simulators.txt 2>&1 || true
           DEVICE=$(xcrun simctl list devices available -j | python3 -c '
           import json,sys
           d=json.load(sys.stdin)["devices"]
-          names=[(rt,x) for rt,xs in d.items() if "iOS" in rt for x in xs]
-          for want in ("iPhone 17 Pro Max","iPhone 16 Pro Max","iPhone 16 Plus","iPhone 15 Pro Max"):
-              m=[x for rt,x in sorted(names, reverse=True) if x["name"]==want]
-              if m: print(m[0]["udid"]); break
+          phones=[x for rt,xs in sorted(d.items(), reverse=True) if "iOS" in rt for x in xs if x["name"].startswith("iPhone")]
+          pick=next((x for x in phones if "Pro Max" in x["name"]), None) or next((x for x in phones if "Plus" in x["name"]), None) or (phones[0] if phones else None)
+          print(pick["udid"] if pick else "")
           ')
-          echo "Using simulator $DEVICE"
+          if [ -z "$DEVICE" ]; then
+            RUNTIME=$(xcrun simctl list runtimes -j | python3 -c 'import json,sys; r=[x for x in json.load(sys.stdin)["runtimes"] if x["platform"]=="iOS" and x["isAvailable"]]; print(r[-1]["identifier"] if r else "")')
+            TYPE=$(xcrun simctl list devicetypes -j | python3 -c 'import json,sys; t=[x for x in json.load(sys.stdin)["devicetypes"] if "Pro Max" in x["name"]]; print(t[-1]["identifier"] if t else "")')
+            echo "Creating simulator $TYPE on $RUNTIME" | tee -a shots/simulators.txt
+            DEVICE=$(xcrun simctl create "Screenshots" "$TYPE" "$RUNTIME")
+          fi
+          echo "Using simulator $DEVICE" | tee -a shots/simulators.txt
           echo "SIM=$DEVICE" >> "$GITHUB_ENV"
-          xcrun simctl boot "$DEVICE"
-          xcrun simctl bootstatus "$DEVICE" -b
+          xcrun simctl boot "$DEVICE" 2>&1 | tee -a shots/simulators.txt || true
+          xcrun simctl bootstatus "$DEVICE" -b 2>&1 | tail -3 | tee -a shots/simulators.txt
           xcrun simctl status_bar "$DEVICE" override --time "9:41" --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4 --dataNetwork wifi || true
           xcrun simctl ui "$DEVICE" appearance dark || true
 
