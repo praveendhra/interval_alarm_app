@@ -1,0 +1,18 @@
+== Library/Sounds ==
+total 11400
+drwxr-xr-x  5 runner  staff      160 Oct 23 04:33 .
+drwxr-xr-x  7 runner  staff      224 Oct 23 04:33 ..
+-rw-r--r--  1 runner  staff   886096 Oct 23 04:33 rem_gentle_chime.caf
+-rw-r--r--  1 runner  staff  2473696 Oct 23 04:33 ring_digital_pulse.caf
+-rw-r--r--  1 runner  staff  2473696 Oct 23 04:33 ring_zen_bell.caf
+File type ID:   caff
+Data format:     1 ch,  44100 Hz, Int16
+estimated duration: 10.000000 sec
+File type ID:   caff
+Data format:     1 ch,  44100 Hz, Int16
+estimated duration: 28.000000 sec
+File type ID:   caff
+Data format:     1 ch,  44100 Hz, Int16
+estimated duration: 28.000000 sec
+== App log ==
+(no log)
