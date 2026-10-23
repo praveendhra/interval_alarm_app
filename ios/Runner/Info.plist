@@ -48,6 +48,10 @@
 	<false/>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Cadence only reads audio files you pick to use as alarm tunes.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Cadence doesn't use the camera. This is required because the file picker it uses for importing tunes can also open the camera.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Cadence doesn't record audio. This is required because the file picker it uses for importing tunes can also capture media.</string>
 	<key>NSAppleMusicUsageDescription</key>
 	<string>Cadence only reads audio files you pick to use as alarm tunes.</string>
 </dict>
