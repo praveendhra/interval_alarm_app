@@ -52,12 +52,20 @@ jobs:
       - name: Install Codemagic CLI tools
         run: pip3 install --break-system-packages codemagic-cli-tools || pip3 install codemagic-cli-tools
 
-      - name: Register the bundle ID if needed
+      - name: Check API key and bundle ID
         run: |
-          if app-store-connect bundle-ids list --bundle-id-identifier "$BUNDLE_ID" --strict-match-identifier --json | python3 -c 'import json,sys; sys.exit(0 if json.load(sys.stdin) else 1)'; then
-            echo "Bundle ID $BUNDLE_ID already registered"
+          # Errors are echoed as ::error:: annotations so they show on the run page.
+          set +e
+          OUT=$(app-store-connect bundle-ids list --bundle-id-identifier "$BUNDLE_ID" --strict-match-identifier --json 2>err.txt)
+          if [ $? -ne 0 ]; then
+            echo "::error::App Store Connect API call failed. Check the APP_STORE_CONNECT_* secrets. $(tail -c 600 err.txt | tr '\n' ' ')"
+            exit 1
+          fi
+          if echo "$OUT" | grep -q "\"$BUNDLE_ID\""; then
+            echo "Bundle ID $BUNDLE_ID is registered"
           else
-            app-store-connect bundle-ids create "$BUNDLE_ID" --name "Cadence" --platform IOS
+            app-store-connect bundle-ids create "$BUNDLE_ID" --name "Cadence" --platform IOS 2>err.txt \
+              || { echo "::error::Could not register $BUNDLE_ID: $(tail -c 600 err.txt | tr '\n' ' ')"; exit 1; }
           fi
 
       - name: Fetch or create signing certificate and profile
@@ -66,7 +74,8 @@ jobs:
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
             --certificate-key=@env:CERTIFICATE_PRIVATE_KEY \
-            --create
+            --create > sign.log 2>&1 \
+            || { cat sign.log; echo "::error::Signing failed: $(tail -c 700 sign.log | tr '\n' ' ')"; exit 1; }
           keychain add-certificates
 
       - run: flutter pub get
@@ -85,7 +94,9 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "build=$BUILD" >> "$GITHUB_OUTPUT"
           flutter build ipa --release --build-name="$VERSION" --build-number="$BUILD" \
-            --export-options-plist="$HOME/export_options.plist"
+            --export-options-plist="$HOME/export_options.plist" > build.log 2>&1 \
+            || { tail -150 build.log; echo "::error::Build failed: $(grep -iE 'error' build.log | tail -5 | tr '\n' ' ' | tail -c 700)"; exit 1; }
+          tail -20 build.log
 
       - uses: actions/upload-artifact@v4
         with:
@@ -94,7 +105,10 @@ jobs:
           retention-days: 30
 
       - name: Upload to TestFlight
-        run: app-store-connect publish --path "$(ls build/ios/ipa/*.ipa | head -1)"
+        run: |
+          app-store-connect publish --path "$(ls build/ios/ipa/*.ipa | head -1)" > publish.log 2>&1 \
+            || { cat publish.log; echo "::error::Upload failed: $(tail -c 700 publish.log | tr '\n' ' ')"; exit 1; }
+          cat publish.log
 
       - name: Summary
         run: |
