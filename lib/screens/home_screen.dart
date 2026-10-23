@@ -14,6 +14,7 @@ import '../widgets/empty_state.dart';
 import '../services/notification_service.dart';
 import '../services/audio_service.dart';
 import '../services/ios_alarm_scheduler.dart';
+import '../demo.dart';
 import 'create_alarm_screen.dart';
 import 'alarm_detail_screen.dart';
 import 'my_tunes_screen.dart';
@@ -44,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       setState(() {
         _now = DateTime.now();
-        _colonVisible = !_colonVisible;
+        _colonVisible = Demo.enabled || !_colonVisible; // steady colon in screenshots
       });
     });
     // Check on launch too (e.g. app opened via full-screen intent)
